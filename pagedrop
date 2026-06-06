@@ -51,20 +51,26 @@ else
   exit 1
 fi
 
-RESPONSE=$(curl -sf -X POST https://pagedrop.io/api/upload \
+RESPONSE=$(curl -s -X POST https://pagedrop.io/api/upload \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD")
 
 # Extract URL from response
 if command -v jq &>/dev/null; then
   URL=$(echo "$RESPONSE" | jq -r '.url // .link // .data.url // .data.link // empty')
+  ERR=$(echo "$RESPONSE" | jq -r '.error.message // .error // .message // empty' 2>/dev/null)
 else
   URL=$(echo "$RESPONSE" | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
+  ERR=$(echo "$RESPONSE" | grep -o '"message":"[^"]*"' | cut -d'"' -f4)
 fi
 
 if [ -z "$URL" ]; then
-  echo "Error: could not extract URL from response:" >&2
-  echo "$RESPONSE" >&2
+  if [ -n "$ERR" ]; then
+    echo "Error: $ERR" >&2
+  else
+    echo "Error: could not extract URL from response:" >&2
+    echo "$RESPONSE" >&2
+  fi
   exit 1
 fi
 
