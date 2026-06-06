@@ -10,11 +10,6 @@ curl -sSL https://raw.githubusercontent.com/nadimtuhin/pagedrop-cli/main/install
 ```
 Installs to `~/.local/bin/pagedrop` and adds it to your PATH.
 
-### Homebrew (tap)
-```bash
-brew install nadimtuhin/pagedrop-cli/pagedrop
-```
-
 ### Manual
 ```bash
 mkdir -p ~/.local/bin
