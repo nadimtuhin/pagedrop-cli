@@ -7,12 +7,28 @@ TTL="3d"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --ttl) TTL="$2"; shift 2 ;;
+    --help|-h)
+      echo "pagedrop — Upload an HTML file to pagedrop.io"
+      echo ""
+      echo "Usage: pagedrop <file.html> [--ttl <duration>]"
+      echo ""
+      echo "Arguments:"
+      echo "  file.html         Path to the HTML file to upload"
+      echo ""
+      echo "Options:"
+      echo "  --ttl <duration>  Time-to-live (default: 3d). Examples: 1h, 7d, 30d"
+      echo "  --help, -h        Show this help message"
+      echo ""
+      echo "Install: curl -sSL https://raw.githubusercontent.com/nadimtuhin/pagedrop-cli/main/install | bash"
+      exit 0
+      ;;
     *) FILE="$1"; shift ;;
   esac
 done
 
 if [ -z "$FILE" ]; then
   echo "Usage: pagedrop <file.html> [--ttl <duration>]" >&2
+  echo "Try 'pagedrop --help' for more information." >&2
   exit 1
 fi
 
