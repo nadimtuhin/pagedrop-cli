@@ -55,10 +55,17 @@ if ! command -v jq &>/dev/null && ! command -v python3 &>/dev/null; then
   exit 1
 fi
 
+PAYLOAD_FILE=$(mktemp)
+trap 'rm -f "$PAYLOAD_FILE"' EXIT
+build_payload > "$PAYLOAD_FILE" || {
+  echo "Error: could not build upload payload" >&2
+  exit 1
+}
+
 # The payload goes over stdin: a large file as one argument hits the OS argument limit.
-RESPONSE=$(build_payload | curl -sS -X POST https://pagedrop.io/api/upload \
+RESPONSE=$(curl -sS -X POST https://pagedrop.io/api/upload \
   -H "Content-Type: application/json" \
-  --data-binary @-) || {
+  --data-binary @- < "$PAYLOAD_FILE") || {
   echo "Error: could not reach pagedrop.io (curl exit $?)" >&2
   exit 1
 }

@@ -16,6 +16,7 @@ for ((i = 1; i <= $#; i++)); do
     --data-binary) [ "${!next}" = "@-" ] && data_stdin=1 ;;
   esac
 done
+touch "$STUB_OUT/called"
 echo "$maxarg" > "$STUB_OUT/maxarg"
 [ "$data_stdin" = 1 ] && cat > "$STUB_OUT/payload"
 if [ -n "$out_file" ]; then echo '#!/bin/sh' > "$out_file"; exit 0; fi

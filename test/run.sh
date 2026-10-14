@@ -11,7 +11,7 @@ chmod +x "$ROOT/test/bin/curl" "$ROOT/pagedrop"
 # PATH without jq, to exercise the python3 and grep fallbacks
 NOJQ="$WORK/nojq"
 mkdir -p "$NOJQ"
-for tool in bash env cat grep cut python3 uname mkdir chmod dirname; do
+for tool in bash env cat grep cut python3 uname mkdir chmod dirname mktemp rm; do
   ln -s "$(command -v "$tool")" "$NOJQ/$tool"
 done
 
@@ -52,6 +52,14 @@ for mode in jq python; do
   maxarg=$(cat "$STUB_OUT/maxarg" 2>/dev/null || echo 0)
   [ "$CODE" = 0 ] && [ "$maxarg" -lt 100000 ] && [ "$(wc -c < "$STUB_OUT/payload")" -gt 300000 ]
   check "large file ($mode): not passed as one argument" $?
+done
+
+for mode in jq python; do
+  if [ "$mode" = jq ]; then P="$ROOT/test/fail-bin:$WITHJQ"; else P="$ROOT/test/fail-bin:$WITHOUTJQ"; fi
+  rm -f "$STUB_OUT/called"
+  run "$P" ok "$HTML"
+  [ "$CODE" != 0 ] && [[ "$ERR" == *"could not build upload payload"* ]] && [ ! -e "$STUB_OUT/called" ]
+  check "payload build failure ($mode): error, curl never called" $?
 done
 
 HOME_DIR="$WORK/home"
