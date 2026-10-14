@@ -24,7 +24,7 @@ echo "Downloading $SCRIPT_NAME from GitHub..."
 if command -v curl &>/dev/null; then
   curl -fsSL "https://raw.githubusercontent.com/$REPO/main/pagedrop" -o "$INSTALL_DIR/$SCRIPT_NAME"
 elif command -v wget &>/dev/null; then
-  wget -qO- "https://raw.githubusercontent.com/$REPO/main/pagedrop" -O "$INSTALL_DIR/$SCRIPT_NAME"
+  wget -qO "$INSTALL_DIR/$SCRIPT_NAME" "https://raw.githubusercontent.com/$REPO/main/pagedrop"
 else
   echo "Error: curl or wget required"
   exit 1

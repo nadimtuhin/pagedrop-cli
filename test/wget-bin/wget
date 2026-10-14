@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Stub wget: accepts only `-qO <file> <url>` and writes a placeholder to <file>.
+if [ $# -ne 3 ] || [ "$1" != "-qO" ] || [[ "$3" != https://* ]]; then
+  echo "stub wget: unexpected args: $*" >&2
+  exit 1
+fi
+echo '#!/bin/sh' > "$2"

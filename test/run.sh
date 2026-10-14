@@ -66,7 +66,14 @@ install_with_shell /bin/bash
 grep -q 'pagedrop-cli install' "$HOME_DIR/.bashrc" && ! grep -q 'pagedrop-cli install' "$HOME_DIR/.zshrc"
 check "installer: SHELL=bash writes .bashrc" $?
 
-! grep -q 'qO-.* -O ' "$ROOT/install"; check "installer: wget branch has no duplicate output flags" $?
+WGET_PATH="$WORK/wgetonly"
+mkdir -p "$WGET_PATH"
+for tool in bash env uname mkdir chmod dirname basename grep; do
+  ln -s "$(command -v "$tool")" "$WGET_PATH/$tool"
+done
+rm -rf "$HOME_DIR"; mkdir -p "$HOME_DIR"
+HOME="$HOME_DIR" SHELL=/bin/bash PATH="$ROOT/test/wget-bin:$WGET_PATH" bash "$ROOT/install" > "$WORK/install.out" 2>&1
+[ -x "$HOME_DIR/.local/bin/pagedrop" ]; check "installer: wget branch downloads the script" $?
 
 [ "$fails" = 0 ] || { echo "$fails failed"; exit 1; }
 echo "all passed"
