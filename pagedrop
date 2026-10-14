@@ -60,8 +60,8 @@ RESPONSE=$(curl -sS -X POST https://pagedrop.io/api/upload \
 
 # Extract URL from response
 if command -v jq &>/dev/null; then
-  URL=$(echo "$RESPONSE" | jq -r '.url // .link // .data.url // .data.link // empty')
-  ERR=$(echo "$RESPONSE" | jq -r '.error.message // .error // .message // empty' 2>/dev/null)
+  URL=$(echo "$RESPONSE" | jq -r '.url // .link // .data.url // .data.link // empty' 2>/dev/null || true)
+  ERR=$(echo "$RESPONSE" | jq -r '.error.message // .error // .message // empty' 2>/dev/null || true)
 else
   URL=$(echo "$RESPONSE" | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
   ERR=$(echo "$RESPONSE" | grep -o '"message":"[^"]*"' | cut -d'"' -f4)
