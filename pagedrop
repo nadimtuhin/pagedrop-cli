@@ -51,9 +51,12 @@ else
   exit 1
 fi
 
-RESPONSE=$(curl -s -X POST https://pagedrop.io/api/upload \
+RESPONSE=$(curl -sS -X POST https://pagedrop.io/api/upload \
   -H "Content-Type: application/json" \
-  -d "$PAYLOAD")
+  -d "$PAYLOAD") || {
+  echo "Error: could not reach pagedrop.io (curl exit $?)" >&2
+  exit 1
+}
 
 # Extract URL from response
 if command -v jq &>/dev/null; then
