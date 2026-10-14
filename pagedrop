@@ -38,22 +38,27 @@ if [ ! -f "$FILE" ]; then
 fi
 
 # Build JSON payload with proper encoding
-if command -v jq &>/dev/null; then
-  PAYLOAD=$(jq -n --arg html "$(cat "$FILE")" --arg ttl "$TTL" '{html: $html, ttl: $ttl}')
-elif command -v python3 &>/dev/null; then
-  PAYLOAD=$(python3 -c "
+build_payload() {
+  if command -v jq &>/dev/null; then
+    jq -n --rawfile html "$FILE" --arg ttl "$TTL" '{html: $html, ttl: $ttl}'
+  else
+    python3 -c "
 import json, sys
 with open(sys.argv[1]) as f:
     print(json.dumps({'html': f.read(), 'ttl': sys.argv[2]}))
-" "$FILE" "$TTL")
-else
+" "$FILE" "$TTL"
+  fi
+}
+
+if ! command -v jq &>/dev/null && ! command -v python3 &>/dev/null; then
   echo "Error: jq or python3 is required for JSON encoding" >&2
   exit 1
 fi
 
-RESPONSE=$(curl -sS -X POST https://pagedrop.io/api/upload \
+# The payload goes over stdin: a large file as one argument hits the OS argument limit.
+RESPONSE=$(build_payload | curl -sS -X POST https://pagedrop.io/api/upload \
   -H "Content-Type: application/json" \
-  -d "$PAYLOAD") || {
+  --data-binary @-) || {
   echo "Error: could not reach pagedrop.io (curl exit $?)" >&2
   exit 1
 }
