@@ -18,3 +18,12 @@ jobs:
 
       - name: Syntax check install
         run: bash -n install
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests (stub curl, no network)
+        run: bash test/run.sh

@@ -24,7 +24,7 @@ echo "Downloading $SCRIPT_NAME from GitHub..."
 if command -v curl &>/dev/null; then
   curl -fsSL "https://raw.githubusercontent.com/$REPO/main/pagedrop" -o "$INSTALL_DIR/$SCRIPT_NAME"
 elif command -v wget &>/dev/null; then
-  wget -qO- "https://raw.githubusercontent.com/$REPO/main/pagedrop" -O "$INSTALL_DIR/$SCRIPT_NAME"
+  wget -qO "$INSTALL_DIR/$SCRIPT_NAME" "https://raw.githubusercontent.com/$REPO/main/pagedrop"
 else
   echo "Error: curl or wget required"
   exit 1
@@ -35,11 +35,11 @@ chmod +x "$INSTALL_DIR/$SCRIPT_NAME"
 # Add to PATH if not already there
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   SHELL_CONFIG=""
-  if [ -n "$ZSH_VERSION" ]; then
-    SHELL_CONFIG="$HOME/.zshrc"
-  elif [ -n "$BASH_VERSION" ]; then
-    SHELL_CONFIG="$HOME/.bashrc"
-  fi
+  # Under `curl | bash` this script always runs in bash, so read the user's login shell instead.
+  case "$(basename "${SHELL:-}")" in
+    zsh) SHELL_CONFIG="$HOME/.zshrc" ;;
+    bash) SHELL_CONFIG="$HOME/.bashrc" ;;
+  esac
 
   if [ -n "$SHELL_CONFIG" ] && [ -f "$SHELL_CONFIG" ]; then
     echo "" >> "$SHELL_CONFIG"

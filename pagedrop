@@ -38,30 +38,45 @@ if [ ! -f "$FILE" ]; then
 fi
 
 # Build JSON payload with proper encoding
-if command -v jq &>/dev/null; then
-  PAYLOAD=$(jq -n --arg html "$(cat "$FILE")" --arg ttl "$TTL" '{html: $html, ttl: $ttl}')
-elif command -v python3 &>/dev/null; then
-  PAYLOAD=$(python3 -c "
+build_payload() {
+  if command -v jq &>/dev/null; then
+    jq -n --rawfile html "$FILE" --arg ttl "$TTL" '{html: $html, ttl: $ttl}'
+  else
+    python3 -c "
 import json, sys
 with open(sys.argv[1]) as f:
     print(json.dumps({'html': f.read(), 'ttl': sys.argv[2]}))
-" "$FILE" "$TTL")
-else
+" "$FILE" "$TTL"
+  fi
+}
+
+if ! command -v jq &>/dev/null && ! command -v python3 &>/dev/null; then
   echo "Error: jq or python3 is required for JSON encoding" >&2
   exit 1
 fi
 
-RESPONSE=$(curl -s -X POST https://pagedrop.io/api/upload \
+PAYLOAD_FILE=$(mktemp)
+trap 'rm -f "$PAYLOAD_FILE"' EXIT
+build_payload > "$PAYLOAD_FILE" || {
+  echo "Error: could not build upload payload" >&2
+  exit 1
+}
+
+# The payload goes over stdin: a large file as one argument hits the OS argument limit.
+RESPONSE=$(curl -sS -X POST https://pagedrop.io/api/upload \
   -H "Content-Type: application/json" \
-  -d "$PAYLOAD")
+  --data-binary @- < "$PAYLOAD_FILE") || {
+  echo "Error: could not reach pagedrop.io (curl exit $?)" >&2
+  exit 1
+}
 
 # Extract URL from response
 if command -v jq &>/dev/null; then
-  URL=$(echo "$RESPONSE" | jq -r '.url // .link // .data.url // .data.link // empty')
-  ERR=$(echo "$RESPONSE" | jq -r '.error.message // .error // .message // empty' 2>/dev/null)
+  URL=$(echo "$RESPONSE" | jq -r '.url // .link // .data.url // .data.link // empty' 2>/dev/null || true)
+  ERR=$(echo "$RESPONSE" | jq -r '.error.message // .error // .message // empty' 2>/dev/null || true)
 else
-  URL=$(echo "$RESPONSE" | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
-  ERR=$(echo "$RESPONSE" | grep -o '"message":"[^"]*"' | cut -d'"' -f4)
+  URL=$(echo "$RESPONSE" | grep -o '"url" *: *"[^"]*"' | cut -d'"' -f4)
+  ERR=$(echo "$RESPONSE" | grep -o '"message" *: *"[^"]*"' | cut -d'"' -f4)
 fi
 
 if [ -z "$URL" ]; then
