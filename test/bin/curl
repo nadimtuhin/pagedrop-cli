@@ -19,7 +19,14 @@ done
 touch "$STUB_OUT/called"
 echo "$maxarg" > "$STUB_OUT/maxarg"
 [ "$data_stdin" = 1 ] && cat > "$STUB_OUT/payload"
-if [ -n "$out_file" ]; then echo '#!/bin/sh' > "$out_file"; exit 0; fi
+if [ -n "$out_file" ]; then
+  if [ "$FAKE" = cutoff ]; then
+    # like real curl when the connection drops mid-transfer: partial file, exit 18
+    printf '#!/usr/bin/env ba' > "$out_file"
+    exit 18
+  fi
+  echo '#!/bin/sh' > "$out_file"; exit 0
+fi
 case "$FAKE" in
   ok) echo '{"url":"https://pagedrop.io/x/abc"}' ;;
   spaced) echo '{"url": "https://pagedrop.io/x/abc"}' ;;
