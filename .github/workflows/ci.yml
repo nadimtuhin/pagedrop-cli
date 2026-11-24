@@ -19,6 +19,12 @@ jobs:
       - name: Syntax check install
         run: bash -n install
 
+      - name: ShellCheck
+        # shellcheck is preinstalled on GitHub's Ubuntu runners
+        run: |
+          shellcheck --version
+          shellcheck pagedrop install test/run.sh test/bin/curl test/wget-bin/wget test/fail-bin/* test/darwin-bin/uname
+
   test:
     name: Tests
     runs-on: ubuntu-latest
